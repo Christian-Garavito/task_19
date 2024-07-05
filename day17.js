@@ -1,52 +1,46 @@
-class TimeLimitedCache{
-    constructor(){
-        this.cache= new Map();
+var TimeLimitedCache = function () {
+};
+
+TimeLimitedCache.prototype.cached = {};
+
+/** 
+ * @param {number} key
+ * @param {number} value
+ * @param {number} duration time until expiration in ms
+ * @return {boolean} if un-expired key already existed
+ */
+TimeLimitedCache.prototype.set = function (key, value, duration) {
+    const hasKey = Object.keys(TimeLimitedCache.prototype.cached).includes(`${key}`)
+    if (hasKey) {
+        clearTimeout(TimeLimitedCache.prototype.cached[key]["timeoutId"]);
     }
-    set(key,value,duration){
+    TimeLimitedCache.prototype.cached[key] = {}
+    TimeLimitedCache.prototype.cached[key]["value"] = value;
+    TimeLimitedCache.prototype.cached[key]["timeoutId"] = setTimeout(() => {
+        delete TimeLimitedCache.prototype.cached[key];
+    }, duration);
+    return hasKey;
+};
 
-        const alreadyExists = this.cache.get(key);
-        if(alreadyExists)
-        {
-            clearTimeout(alreadyExists.timeoutId);
-        }
+/** 
+ * @param {number} key
+ * @return {number} value associated with key
+ */
+TimeLimitedCache.prototype.get = function (key) {
+    console.log(TimeLimitedCache.prototype.cached);
+    return Object.keys(TimeLimitedCache.prototype.cached).includes(`${key}`) ? TimeLimitedCache.prototype.cached[key]["value"] : -1;
+};
 
-        const timeoutId = setTimeout(()=>{
-            this.cache.delete(key);
-        },duration);
+/** 
+ * @return {number} count of non-expired keys
+ */
+TimeLimitedCache.prototype.count = function () {
+    return Object.keys(TimeLimitedCache.prototype.cached).length;
+};
 
-        this.cache.set(key,{value,timeoutId});
-        return Boolean(alreadyExists)
-    }
-    get(key){
-        if(this.cache.has(key)){
-            return this.cache.get(key).value;
-        }
-        return -1;
-    }
-    count(){
-        return this.cache.size;
-    }
-}
-
-const cache = new TimeLimitedCache();
-
-console.log(cache.set(1,42,1000));
-console.log(cache.get(1));
-
-setTimeout(()=>{
-    console.log(cache.get(1));
-    console.log(cache.count());
-},1500);
-
-console.log(cache.set(1,42,1000));
-console.log(cache.set(1,43,3000));
-console.log(cache.get(1));
-
-setTimeout(()=>{
-    console.log(cache.get(1));
-},1500);
-
-setTimeout(()=>{
-    console.log(cache.get(1));
-    console.log(cache.count());
-},2500);
+/**
+ * const timeLimitedCache = new TimeLimitedCache()
+ * timeLimitedCache.set(1, 42, 1000); // false
+ * timeLimitedCache.get(1) // 42
+ * timeLimitedCache.count() // 1
+ */
